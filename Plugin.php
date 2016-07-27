@@ -2,7 +2,7 @@
 if (!defined('__TYPECHO_ROOT_DIR__')) exit;
 
 /**
- * 炒鸡漂亮的html5播放器APlayer插件，支持在文章中插入html5播放器，启用前请确保插件的cache目录可写
+ * 炒鸡漂亮的html5播放器APlayer插件，支持在文章中插入html5播放器
  * 
  * @package APlayer
  * @author ZGQ
@@ -16,6 +16,18 @@ class APlayer_Plugin implements Typecho_Plugin_Interface
     //此变量用以在一个变量中区分多个播放器实例
     protected static $playerID = 0;
     
+     public function __construct()
+     {
+        define(APLAYER_CACHE_DIR, sys_get_temp_dir().'/APlayerCache');
+        if (!self::is_really_writable())
+        {
+            // Create cache directory if not exists
+            if (!file_exists(APLAYER_CACHE_DIR))
+            {
+                mkdir(APLAYER_CACHE_DIR, 0755);
+            }
+        }
+     }
     /**
      * 激活插件方法,如果激活失败,直接抛出异常
      * 
@@ -25,12 +37,13 @@ class APlayer_Plugin implements Typecho_Plugin_Interface
      */
     public static function activate()
     {
+        
         Typecho_Plugin::factory('Widget_Abstract_Contents')->filter = array('APlayer_Plugin','playerfilter');
         Typecho_Plugin::factory('Widget_Abstract_Contents')->contentEx = array('APlayer_Plugin','playerparse');
         Typecho_Plugin::factory('Widget_Abstract_Contents')->excerptEx = array('APlayer_Plugin','playerparse');
         Typecho_Plugin::factory('Widget_Archive')->header = array('APlayer_Plugin','playercss');
         Typecho_Plugin::factory('Widget_Archive')->footer = array('APlayer_Plugin','footerjs');
-        $info = self::is_really_writable(dirname(__FILE__)."/cache") ? "插件启用成功！！" : "APlayer插件目录的cache目录不可写，可能会导致博客加载缓慢！"; 
+        $info = self::is_really_writable(APLAYER_CACHE_DIR) ? "插件启用成功！！" : "cache目录不可写，可能会导致博客加载缓慢！"; 
         return _t($info);
     }
     
@@ -43,7 +56,7 @@ class APlayer_Plugin implements Typecho_Plugin_Interface
      * @throws Typecho_Plugin_Exception
      */
     public static function deactivate() {
-        $files = glob('usr/plugins/APlayer/cache/*');
+        $files = glob(APLAYER_CACHE_DIR.'/*');
         foreach($files as $file){
             if (is_file($file)){
                 @unlink($file);
@@ -113,9 +126,7 @@ class APlayer_Plugin implements Typecho_Plugin_Interface
      */
     private function deletefile()
     {
-        $path = __TYPECHO_ROOT_DIR__ .'/usr/plugins/APlayer/cache/';
-
-        foreach (glob($path.'*') as $filename) {
+        foreach (glob(APLAYER_CACHE_DIR.'/*') as $filename) {
             @unlink($filename);
         }
 
@@ -141,7 +152,7 @@ class APlayer_Plugin implements Typecho_Plugin_Interface
      */
     public static function playercss()
     {
-        $playerurl = Helper::options()->pluginUrl.'/APlayer/assets/dist/';
+        $playerurl = Helper::options()->pluginUrl.'/APlayer/assets/';
         echo '
 <!-- APlayer Start -->
 <link rel="stylesheet" type="text/css" href="'.$playerurl.'APlayer.min.css" />
@@ -159,7 +170,7 @@ class APlayer_Plugin implements Typecho_Plugin_Interface
      */
      public static function footerjs()
      {
-        $playerurl = Helper::options()->pluginUrl.'/APlayer/assets/dist/';
+        $playerurl = Helper::options()->pluginUrl.'/APlayer/assets/';
         
         echo <<<EOF
 <!-- APlayer Start -->
@@ -664,9 +675,7 @@ EOF;
      * @return number
      */
     private static function cache_set($key, $value){
-        $cachedir = dirname(__FILE__)."/cache";
-
-        $fp = fopen($cachedir.'/'.$key,"w+");
+        $fp = fopen(APLAYER_CACHE_DIR.'/'.$key,"w+");
         $status = fwrite($fp,serialize($value));
         fclose($fp);
         return $status;
@@ -680,11 +689,9 @@ EOF;
      * @return mixed|boolean
      */
     private static function cache_get($key){
-        $cachedir = dirname(__FILE__)."/cache";
-
         //找到缓存直接读取缓存目录的文件
         if(file_exists($cachedir.'/'.$key)){
-            return unserialize(file_get_contents($cachedir.'/'.$key));
+            return unserialize(file_get_contents(APLAYER_CACHE_DIR.'/'.$key));
         }else{
             return false;
         }
@@ -840,11 +847,6 @@ EOF;
      */
     private static function is_really_writable($file)
     {
-        // Create cache directory if not exists
-        if (!file_exists($file))
-        {
-            mkdir($file, 0755);
-        }
         // If we're on a Unix server with safe_mode off we call is_writable
         if (DIRECTORY_SEPARATOR === '/' && (version_compare(PHP_VERSION, '5.4', '>=') OR ! ini_get('safe_mode')))
         {
