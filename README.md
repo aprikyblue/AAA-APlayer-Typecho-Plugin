@@ -3,6 +3,10 @@ Typecho plugin for a beautiful html5 music player https://github.com/DIYgod/APla
 
 [Demo](http://blog.izgq.net/archives/456/)
 
+*Notice: This is a personal ersion.* 
+
+The original version is [zgq354/APlayer-Typecho-Plugin](https://github.com/zgq354/APlayer-Typecho-Plugin). This repository forked from it when the initial.
+
 ## 介绍
 1. 通过简短的代码在文章或页面中插入漂亮的Html5播放器
 2. 自动解析lrc链接，可根据歌曲名和歌手名自动查找封面并生成缓存
