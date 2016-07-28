@@ -11,23 +11,13 @@ if (!defined('__TYPECHO_ROOT_DIR__')) exit;
  * @link https://github.com/zgq354/APlayer-Typecho-Plugin
  */
 
+define(APLAYER_CACHE_DIR, sys_get_temp_dir().'/APlayerCache');
+ 
 class APlayer_Plugin implements Typecho_Plugin_Interface
 {
     //此变量用以在一个变量中区分多个播放器实例
     protected static $playerID = 0;
-    
-     public function __construct()
-     {
-        define(APLAYER_CACHE_DIR, sys_get_temp_dir().'/APlayerCache');
-        if (!self::is_really_writable())
-        {
-            // Create cache directory if not exists
-            if (!file_exists(APLAYER_CACHE_DIR))
-            {
-                mkdir(APLAYER_CACHE_DIR, 0755);
-            }
-        }
-     }
+
     /**
      * 激活插件方法,如果激活失败,直接抛出异常
      * 
@@ -675,6 +665,16 @@ EOF;
      * @return number
      */
     private static function cache_set($key, $value){
+        if (!self::is_really_writable())
+        {
+            // Create cache directory if not exists
+            if (!file_exists(APLAYER_CACHE_DIR))
+            {
+                mkdir(APLAYER_CACHE_DIR, 0755);
+            }else{
+                chmod(APLAYER_CACHE_DIR, 0755);
+            }
+        }
         $fp = fopen(APLAYER_CACHE_DIR.'/'.$key,"w+");
         $status = fwrite($fp,serialize($value));
         fclose($fp);
