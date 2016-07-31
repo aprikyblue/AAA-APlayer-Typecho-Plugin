@@ -11,7 +11,7 @@ if (!defined('__TYPECHO_ROOT_DIR__')) exit;
  * @link https://github.com/zgq354/APlayer-Typecho-Plugin
  */
 
-define(APLAYER_CACHE_DIR, sys_get_temp_dir().'/APlayerCache');
+define('APLAYER_CACHE_DIR', sys_get_temp_dir().'/APlayerCache');
  
 class APlayer_Plugin implements Typecho_Plugin_Interface
 {
@@ -665,7 +665,7 @@ EOF;
      * @return number
      */
     private static function cache_set($key, $value){
-        if (!self::is_really_writable())
+        if (!self::is_really_writable(APLAYER_CACHE_DIR))
         {
             // Create cache directory if not exists
             if (!file_exists(APLAYER_CACHE_DIR))
